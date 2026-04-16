@@ -1,0 +1,274 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>macOS Clock</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="manifest" href="{% static 'manifest.json' %}">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        macos: {
+                            sidebar: 'rgba(30, 30, 30, 0.7)',
+                            content: 'rgba(0, 0, 0, 0.2)',
+                            accent: '#007AFF', // Classic macOS blue
+                        }
+                    },
+                    backdropBlur: {
+                        'macos': '20px',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            overflow: hidden;
+        }
+
+        .macos-glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .macos-sidebar {
+            background: rgba(40, 40, 40, 0.6);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .active-tab {
+            background: #007AFF !important;
+            color: white !important;
+            box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+        }
+
+        /* Animated Background */
+        .bg-gradient {
+            background: linear-gradient(-45deg, #1e3a8a, #4c1d95, #831843, #1e40af);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+        }
+
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Toggle Switch */
+        .toggle-dot {
+            transition: all 0.3s ease-in-out;
+        }
+        input:checked ~ .toggle-dot {
+            transform: translateX(100%);
+            background-color: #ffffff;
+        }
+        input:checked ~ .toggle-bg {
+            background-color: #007AFF;
+        }
+    </style>
+</head>
+<body class="bg-gradient text-white h-screen w-full flex overflow-hidden">
+
+    <!-- Sidebar -->
+    <aside class="macos-sidebar w-20 md:w-64 h-full flex flex-col py-8 z-20">
+        <div class="px-6 mb-10 hidden md:block">
+            <h1 class="text-2xl font-bold tracking-tight">Clock</h1>
+        </div>
+        
+        <nav class="flex-1 space-y-2 px-3">
+            <button onclick="switchTab('clock')" class="sidebar-item w-full flex items-center p-3 rounded-xl transition-all hover:bg-white/10 active-tab" id="tab-clock">
+                <i class="fas fa-clock w-8 text-xl"></i>
+                <span class="hidden md:block ml-3 font-medium">World Clock</span>
+            </button>
+            <button onclick="switchTab('alarm')" class="sidebar-item w-full flex items-center p-3 rounded-xl transition-all hover:bg-white/10" id="tab-alarm">
+                <i class="fas fa-bell w-8 text-xl"></i>
+                <span class="hidden md:block ml-3 font-medium">Alarm</span>
+            </button>
+            <button onclick="switchTab('stopwatch')" class="sidebar-item w-full flex items-center p-3 rounded-xl transition-all hover:bg-white/10" id="tab-stopwatch">
+                <i class="fas fa-stopwatch w-8 text-xl"></i>
+                <span class="hidden md:block ml-3 font-medium">Stopwatch</span>
+            </button>
+            <button onclick="switchTab('timer')" class="sidebar-item w-full flex items-center p-3 rounded-xl transition-all hover:bg-white/10" id="tab-timer">
+                <i class="fas fa-hourglass-half w-8 text-xl"></i>
+                <span class="hidden md:block ml-3 font-medium">Timer</span>
+            </button>
+        </nav>
+
+        <!-- Sidebar Footer (Settings toggle) -->
+        <div class="px-6 mt-auto">
+             <button onclick="toggleSettings()" class="w-full flex items-center p-3 rounded-xl transition-all hover:bg-white/10">
+                <i class="fas fa-cog w-8 text-xl"></i>
+                <span class="hidden md:block ml-3 font-medium">Settings</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 h-full overflow-y-auto relative p-6 md:p-12">
+        
+        <!-- Clock View -->
+        <div id="view-clock" class="view h-full flex flex-col items-center justify-center space-y-8 animate-fade-in relative">
+            
+            <!-- Weather Widget -->
+            <div id="weather-widget" class="absolute top-0 left-0 p-4 macos-glass rounded-2xl text-xs font-medium opacity-60 hover:opacity-100 transition-opacity">
+                Loading weather...
+            </div>
+
+            <!-- Controls Overlay -->
+            <div class="absolute top-0 right-0 flex space-x-3">
+                <button onclick="toggleAnalog()" class="p-3 bg-white/10 rounded-full hover:bg-white/20 transition-all shadow-lg" title="Toggle Analog">
+                    <i class="fas fa-circle-notch"></i>
+                </button>
+                <button onclick="toggleFullscreen()" class="p-3 bg-white/10 rounded-full hover:bg-white/20 transition-all shadow-lg" title="Fullscreen">
+                    <i class="fas fa-expand"></i>
+                </button>
+            </div>
+
+            <div id="digital-clock" class="text-center">
+                <p id="current-date" class="text-xl md:text-2xl font-medium text-white/60 mb-2 uppercase tracking-widest"></p>
+                <h2 id="live-time" class="text-8xl md:text-[12rem] font-bold tracking-tighter leading-none mb-4 tabular-nums">12:00:00</h2>
+                <p id="am-pm" class="text-3xl font-light text-white/80"></p>
+            </div>
+
+            <!-- Analog Clock -->
+            <div id="analog-clock" class="hidden relative w-64 h-64 md:w-96 md:h-96 rounded-full border-4 border-white/20 macos-glass flex items-center justify-center">
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <div class="w-2 h-2 rounded-full bg-white z-20"></div>
+                </div>
+                <div id="hour-hand" class="absolute h-1/4 w-1.5 bg-white rounded-full origin-bottom z-10" style="bottom: 50%"></div>
+                <div id="min-hand" class="absolute h-2/5 w-1 bg-white/80 rounded-full origin-bottom z-10" style="bottom: 50%"></div>
+                <div id="sec-hand" class="absolute h-1/2 w-0.5 bg-macos-accent rounded-full origin-bottom z-10" style="bottom: 50%"></div>
+                
+                <!-- Clock Markings -->
+                <div class="absolute inset-4 pointer-events-none">
+                     <span class="absolute top-0 left-1/2 -translate-x-1/2 font-bold opacity-50">12</span>
+                     <span class="absolute right-0 top-1/2 -translate-y-1/2 font-bold opacity-50">3</span>
+                     <span class="absolute bottom-0 left-1/2 -translate-x-1/2 font-bold opacity-50">6</span>
+                     <span class="absolute left-0 top-1/2 -translate-y-1/2 font-bold opacity-50">9</span>
+                </div>
+            </div>
+            
+            <!-- Quick World Clocks -->
+            <div id="world-clock-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-5xl mt-12">
+                <!-- World clocks will be injected here -->
+            </div>
+        </div>
+
+        <!-- Alarm View -->
+        <div id="view-alarm" class="view hidden animate-fade-in">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-4xl font-bold">Alarm</h2>
+                <button onclick="openAlarmModal()" class="bg-macos-accent px-6 py-3 rounded-full font-bold hover:opacity-90 transition-all flex items-center">
+                    <i class="fas fa-plus mr-2"></i> New Alarm
+                </button>
+            </div>
+            <div id="alarm-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Alarms injected here -->
+            </div>
+        </div>
+
+        <!-- Stopwatch View -->
+        <div id="view-stopwatch" class="view hidden animate-fade-in h-full flex flex-col items-center justify-center">
+             <div class="text-center mb-12">
+                <h2 id="stopwatch-display" class="text-8xl md:text-[10rem] font-bold tabular-nums">00:00.00</h2>
+            </div>
+            <div class="flex space-x-6 mb-12">
+                <button id="lap-btn" disabled onclick="addLap()" class="w-24 h-24 rounded-full border-2 border-white/20 flex items-center justify-center font-bold hover:bg-white/10 disabled:opacity-50 transition-all">Lap</button>
+                <button id="stopwatch-start-btn" onclick="toggleStopwatch()" class="w-24 h-24 rounded-full bg-green-500/20 text-green-400 flex items-center justify-center font-bold hover:bg-green-500/30 transition-all">Start</button>
+                <button id="stopwatch-reset-btn" onclick="resetStopwatch()" class="w-24 h-24 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center font-bold hover:bg-red-500/30 transition-all">Reset</button>
+            </div>
+            <div class="w-full max-w-md bg-white/5 rounded-2xl overflow-hidden macos-glass">
+                <div id="laps-list" class="max-h-64 overflow-y-auto">
+                    <!-- Laps injected here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Timer View -->
+        <div id="view-timer" class="view hidden animate-fade-in h-full flex flex-col items-center justify-center">
+            <div class="timer-setup space-y-8 flex flex-col items-center">
+                <div class="flex space-x-4 items-center mb-8">
+                    <div class="flex flex-col items-center">
+                        <input type="number" id="timer-hours" min="0" max="23" value="0" class="bg-white/10 text-5xl w-24 p-4 rounded-xl text-center focus:outline-none focus:ring-2 ring-macos-accent">
+                        <span class="mt-2 text-sm opacity-50">Hours</span>
+                    </div>
+                    <span class="text-4xl">:</span>
+                    <div class="flex flex-col items-center">
+                        <input type="number" id="timer-minutes" min="0" max="59" value="0" class="bg-white/10 text-5xl w-24 p-4 rounded-xl text-center focus:outline-none focus:ring-2 ring-macos-accent">
+                        <span class="mt-2 text-sm opacity-50">Min</span>
+                    </div>
+                    <span class="text-4xl">:</span>
+                    <div class="flex flex-col items-center">
+                        <input type="number" id="timer-seconds" min="0" max="59" value="0" class="bg-white/10 text-5xl w-24 p-4 rounded-xl text-center focus:outline-none focus:ring-2 ring-macos-accent">
+                        <span class="mt-2 text-sm opacity-50">Sec</span>
+                    </div>
+                </div>
+                <button id="timer-start-btn" onclick="startTimer()" class="w-32 h-32 rounded-full bg-macos-accent flex items-center justify-center text-2xl font-bold shadow-xl shadow-macos-accent/20 hover:scale-105 transition-all">Start</button>
+            </div>
+
+            <div id="timer-running" class="hidden flex flex-col items-center space-y-8">
+                <h3 id="timer-display" class="text-8xl md:text-[10rem] font-bold tabular-nums">00:00:00</h3>
+                <div class="flex space-x-6">
+                    <button onclick="pauseTimer()" class="w-16 h-16 rounded-full bg-amber-500/20 text-amber-500 flex items-center justify-center"><i class="fas fa-pause"></i></button>
+                    <button onclick="cancelTimer()" class="w-16 h-16 rounded-full bg-red-500/20 text-red-500 flex items-center justify-center"><i class="fas fa-times"></i></button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Modals & Overlays -->
+    <div id="alarm-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="macos-glass w-full max-w-md rounded-3xl p-8 animate-modal-in">
+            <h3 class="text-2xl font-bold mb-6">New Alarm</h3>
+            <div class="space-y-6">
+                <div>
+                    <label class="block text-sm opacity-50 mb-2">Time</label>
+                    <input type="time" id="new-alarm-time" class="w-full bg-white/10 p-4 rounded-xl text-2xl focus:outline-none text-white">
+                </div>
+                <div>
+                    <label class="block text-sm opacity-50 mb-2">Label</label>
+                    <input type="text" id="new-alarm-label" placeholder="Wake Up" class="w-full bg-white/10 p-3 rounded-xl focus:outline-none text-white">
+                </div>
+                <div class="flex justify-between items-center">
+                    <span>Repeat Daily</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="new-alarm-repeat" class="sr-only">
+                        <div class="toggle-bg w-11 h-6 bg-white/20 rounded-full"></div>
+                        <div class="toggle-dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition"></div>
+                    </label>
+                </div>
+            </div>
+            <div class="flex space-x-3 mt-10">
+                <button onclick="closeAlarmModal()" class="flex-1 p-4 rounded-2xl bg-white/10 hover:bg-white/20 transition-all font-medium">Cancel</button>
+                <button onclick="saveAlarm()" class="flex-1 p-4 rounded-2xl bg-macos-accent hover:opacity-90 transition-all font-bold">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed bottom-8 right-8 z-[100] space-y-3"></div>
+
+    <script src="{% static 'js/main.js' %}"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register("{% static 'js/sw.js' %}");
+        }
+    </script>
+</body>
+</html>
