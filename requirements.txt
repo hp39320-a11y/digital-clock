@@ -1,0 +1,8 @@
+django==6.0.3
+gunicorn
+whitenoise[brotli]
+django-cleanup
+django-pwa
+django-crispy-forms
+crispy-tailwind
+pillow
