@@ -59,14 +59,28 @@ function switchTab(tabId) {
     // Update State
     state.activeTab = tabId;
 
-    // Update Sidebar UI
+    // Update Sidebar UI (Desktop)
     document.querySelectorAll('.sidebar-item').forEach(btn => btn.classList.remove('active-tab'));
-    document.getElementById(`tab-${tabId}`).classList.add('active-tab');
+    const desktopTab = document.getElementById(`tab-${tabId}`);
+    if (desktopTab) desktopTab.classList.add('active-tab');
+
+    // Update Mobile Nav UI
+    document.querySelectorAll('.mobile-nav-item').forEach(btn => {
+        btn.classList.remove('active-tab-mobile', 'text-white');
+        btn.classList.add('text-white/60');
+    });
+    const mobileTab = document.getElementById(`m-tab-${tabId}`);
+    if (mobileTab) {
+        mobileTab.classList.add('active-tab-mobile', 'text-white');
+        mobileTab.classList.remove('text-white/60');
+    }
 
     // Update Views
     document.querySelectorAll('.view').forEach(view => view.classList.add('hidden'));
-    document.getElementById(`view-${tabId}`).classList.remove('hidden');
+    const targetView = document.getElementById(`view-${tabId}`);
+    if (targetView) targetView.classList.remove('hidden');
 }
+
 
 // --- Digital Clock ---
 function updateTime() {

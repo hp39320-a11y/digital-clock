@@ -82,10 +82,12 @@
         }
     </style>
 </head>
-<body class="bg-gradient text-white h-screen w-full flex overflow-hidden">
+<body class="bg-gradient text-white h-screen w-full flex flex-col md:flex-row overflow-hidden">
 
-    <!-- Sidebar -->
-    <aside class="macos-sidebar w-20 md:w-64 h-full flex flex-col py-8 z-20">
+
+    <!-- Sidebar (Desktop only) -->
+    <aside class="macos-sidebar hidden md:flex w-64 h-full flex-col py-8 z-20">
+
         <div class="px-6 mb-10 hidden md:block">
             <h1 class="text-2xl font-bold tracking-tight">Clock</h1>
         </div>
@@ -139,11 +141,12 @@
                 </button>
             </div>
 
-            <div id="digital-clock" class="text-center">
-                <p id="current-date" class="text-xl md:text-2xl font-medium text-white/60 mb-2 uppercase tracking-widest"></p>
-                <h2 id="live-time" class="text-8xl md:text-[12rem] font-bold tracking-tighter leading-none mb-4 tabular-nums">12:00:00</h2>
-                <p id="am-pm" class="text-3xl font-light text-white/80"></p>
+            <div id="digital-clock" class="text-center px-4">
+                <p id="current-date" class="text-lg md:text-2xl font-medium text-white/60 mb-2 uppercase tracking-widest"></p>
+                <h2 id="live-time" class="text-5xl sm:text-7xl md:text-9xl lg:text-[12rem] font-bold tracking-tighter leading-none mb-4 tabular-nums">12:00:00</h2>
+                <p id="am-pm" class="text-2xl md:text-3xl font-light text-white/80"></p>
             </div>
+
 
             <!-- Analog Clock -->
             <div id="analog-clock" class="hidden relative w-64 h-64 md:w-96 md:h-96 rounded-full border-4 border-white/20 macos-glass flex items-center justify-center">
@@ -231,6 +234,31 @@
         </div>
 
     </main>
+
+    <!-- Mobile Bottom Navigation -->
+    <nav class="md:hidden macos-sidebar flex justify-around items-center py-4 px-2 z-50 border-t border-white/5">
+        <button onclick="switchTab('clock')" class="mobile-nav-item flex flex-col items-center space-y-1 text-white/60 active-tab-mobile" id="m-tab-clock">
+            <i class="fas fa-clock text-xl"></i>
+            <span class="text-[10px] font-medium">Clock</span>
+        </button>
+        <button onclick="switchTab('alarm')" class="mobile-nav-item flex flex-col items-center space-y-1 text-white/60" id="m-tab-alarm">
+            <i class="fas fa-bell text-xl"></i>
+            <span class="text-[10px] font-medium">Alarm</span>
+        </button>
+        <button onclick="switchTab('stopwatch')" class="mobile-nav-item flex flex-col items-center space-y-1 text-white/60" id="m-tab-stopwatch">
+            <i class="fas fa-stopwatch text-xl"></i>
+            <span class="text-[10px] font-medium">Stopwatch</span>
+        </button>
+        <button onclick="switchTab('timer')" class="mobile-nav-item flex flex-col items-center space-y-1 text-white/60" id="m-tab-timer">
+            <i class="fas fa-hourglass-half text-xl"></i>
+            <span class="text-[10px] font-medium">Timer</span>
+        </button>
+        <button onclick="toggleSettings()" class="mobile-nav-item flex flex-col items-center space-y-1 text-white/60">
+            <i class="fas fa-cog text-xl"></i>
+            <span class="text-[10px] font-medium">Settings</span>
+        </button>
+    </nav>
+
 
     <!-- Modals & Overlays -->
     <div id="alarm-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">

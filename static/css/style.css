@@ -59,6 +59,13 @@
     color: white;
 }
 
+.active-tab-mobile {
+    color: #007AFF !important;
+    transform: translateY(-2px);
+    transition: all 0.3s ease;
+}
+
+
 /* 12/24h toggle button */
 .format-toggle {
     position: fixed;
