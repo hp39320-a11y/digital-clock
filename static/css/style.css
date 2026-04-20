@@ -5,8 +5,8 @@
 }
 
 @keyframes modalIn {
-    from { opacity: 0; transform: scale(0.95); }
-    to { opacity: 1; transform: scale(1); }
+    from { opacity: 0; transform: scale(0.95) translateY(20px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
 }
 
 .animate-fade-in {
@@ -14,12 +14,44 @@
 }
 
 .animate-modal-in {
-    animation: modalIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    animation: modalIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+
+/* Orb Animations */
+@keyframes orb-1 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(30%, 20%) scale(1.1); }
+    66% { transform: translate(-10%, 40%) scale(0.9); }
+}
+@keyframes orb-2 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(-20%, -30%) scale(1.2); }
+    66% { transform: translate(10%, -10%) scale(0.8); }
+}
+@keyframes orb-3 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(-40%, 10%) scale(0.9); }
+    66% { transform: translate(20%, -20%) scale(1.1); }
+}
+
+.animate-orb-1 { animation: orb-1 15s infinite alternate ease-in-out; }
+.animate-orb-2 { animation: orb-2 18s infinite alternate-reverse ease-in-out; }
+.animate-orb-3 { animation: orb-3 22s infinite alternate ease-in-out; }
 
 /* Glassmorphism Refinements */
 .macos-glass {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(30px) saturate(180%);
+    -webkit-backdrop-filter: blur(30px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+}
+
+.macos-sidebar {
+    background: rgba(25, 25, 25, 0.4);
+    backdrop-filter: blur(50px) saturate(150%);
+    -webkit-backdrop-filter: blur(50px) saturate(150%);
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 /* Custom Scrollbar */
@@ -41,22 +73,11 @@
 }
 
 /* Tab Switching Classes */
-.view {
-    transition: all 0.3s ease-in-out;
-}
-
-/* Toggle specific styling if Tailwind classes don't cover it perfectly */
-.toggle-bg {
-    transition: background-color 0.3s ease;
-}
-
-/* Sidebar Hover/Active Effects */
-.sidebar-item {
-    color: rgba(255, 255, 255, 0.7);
-}
-
-.sidebar-item:hover {
-    color: white;
+.active-tab {
+    background: rgba(0, 122, 255, 0.9) !important;
+    color: white !important;
+    box-shadow: 0 8px 24px rgba(0, 122, 255, 0.4);
+    transform: scale(1.02);
 }
 
 .active-tab-mobile {
@@ -65,28 +86,42 @@
     transition: all 0.3s ease;
 }
 
-
-/* 12/24h toggle button */
-.format-toggle {
-    position: fixed;
-    top: 2rem;
-    right: 2rem;
-    z-index: 30;
+/* Animated Background */
+.bg-gradient {
+    background: linear-gradient(-45deg, #0f172a, #1e3a8a, #312e81, #1e1b4b);
+    background-size: 400% 400%;
+    animation: gradient 20s ease infinite;
 }
 
-/* Lap Highlight */
-.lap-item:first-child {
-    border-top: none;
+@keyframes gradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Toggle Switch */
+.toggle-dot {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+input:checked ~ .toggle-dot {
+    transform: translateX(100%);
+}
+input:checked ~ .toggle-bg {
+    background-color: #007AFF;
+}
+
+/* Toast styling - macOS Notification Style */
+.toast-msg {
+    background: rgba(30, 30, 30, 0.7);
+    backdrop-filter: blur(40px) saturate(200%);
+    -webkit-backdrop-filter: blur(40px) saturate(200%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    min-width: 300px;
+    border-radius: 1.25rem;
 }
 
 .lap-item {
     border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-/* Toast styling */
-.toast-msg {
-    background: rgba(40, 40, 40, 0.8);
-    backdrop-filter: blur(20px);
-    border-left: 4px solid #007AFF;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-}

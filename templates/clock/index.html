@@ -8,7 +8,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="manifest" href="{% static 'manifest.json' %}">
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=2">
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -35,57 +35,16 @@
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             overflow: hidden;
         }
-
-        .macos-glass {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(30px);
-            -webkit-backdrop-filter: blur(30px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .macos-sidebar {
-            background: rgba(40, 40, 40, 0.6);
-            backdrop-filter: blur(40px);
-            -webkit-backdrop-filter: blur(40px);
-            border-right: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .active-tab {
-            background: #007AFF !important;
-            color: white !important;
-            box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
-        }
-
-        /* Animated Background */
-        .bg-gradient {
-            background: linear-gradient(-45deg, #1e3a8a, #4c1d95, #831843, #1e40af);
-            background-size: 400% 400%;
-            animation: gradient 15s ease infinite;
-        }
-
-        @keyframes gradient {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        /* Toggle Switch */
-        .toggle-dot {
-            transition: all 0.3s ease-in-out;
-        }
-        input:checked ~ .toggle-dot {
-            transform: translateX(100%);
-            background-color: #ffffff;
-        }
-        input:checked ~ .toggle-bg {
-            background-color: #007AFF;
-        }
     </style>
 </head>
 <body class="bg-gradient text-white h-screen w-full flex flex-col md:flex-row overflow-hidden">
 
-
-    <!-- Sidebar (Desktop only) -->
+    <!-- Animated Background Orbs -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none -z-10">
+        <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-500/20 rounded-full blur-[120px] animate-orb-1"></div>
+        <div class="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-500/20 rounded-full blur-[120px] animate-orb-2"></div>
+        <div class="absolute top-[20%] right-[10%] w-[30%] h-[30%] bg-pink-500/20 rounded-full blur-[120px] animate-orb-3"></div>
+    </div>
     <aside class="macos-sidebar hidden md:flex w-64 h-full flex-col py-8 z-20">
 
         <div class="px-6 mb-10 hidden md:block">
@@ -127,8 +86,14 @@
         <div id="view-clock" class="view h-full flex flex-col items-center justify-center space-y-8 animate-fade-in relative">
             
             <!-- Weather Widget -->
-            <div id="weather-widget" class="absolute top-0 left-0 p-4 macos-glass rounded-2xl text-xs font-medium opacity-60 hover:opacity-100 transition-opacity">
-                Loading weather...
+            <div id="weather-widget" class="absolute top-0 left-0 m-4 p-4 macos-glass rounded-2xl text-sm font-medium opacity-80 hover:opacity-100 transition-all cursor-pointer backdrop-blur-xl border border-white/10 flex items-center space-x-3 shadow-2xl">
+                <div id="weather-icon" class="text-2xl text-blue-400">
+                    <i class="fas fa-cloud-sun-rain animate-pulse"></i>
+                </div>
+                <div class="flex flex-col">
+                    <span id="weather-temp" class="text-lg font-bold leading-tight">--°C</span>
+                    <span id="weather-desc" class="text-[10px] opacity-60 uppercase tracking-tighter">Updating...</span>
+                </div>
             </div>
 
             <!-- Controls Overlay -->
@@ -289,10 +254,76 @@
         </div>
     </div>
 
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="fixed inset-0 bg-black/60 backdrop-blur-md z-[60] hidden flex items-center justify-center p-4">
+        <div class="macos-glass w-full max-w-lg rounded-[2.5rem] overflow-hidden animate-modal-in shadow-2xl border border-white/20">
+            <div class="p-8 pb-4 flex justify-between items-center border-b border-white/10">
+                <h3 class="text-2xl font-bold">Settings</h3>
+                <button onclick="closeSettings()" class="text-white/40 hover:text-white transition-colors text-xl">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="p-8 space-y-8">
+                <!-- Appearance -->
+                <section>
+                    <h4 class="text-xs font-bold uppercase tracking-widest text-white/40 mb-4">Appearance</h4>
+                    <div class="grid grid-cols-4 gap-4">
+                        <button onclick="setTheme('default')" class="flex flex-col items-center space-y-2 group">
+                            <div class="w-12 h-12 rounded-full border-2 border-white/20 bg-gradient-to-br from-blue-600 to-indigo-900 group-hover:scale-110 transition-transform"></div>
+                            <span class="text-[10px] font-medium opacity-60">Classic</span>
+                        </button>
+                        <button onclick="setTheme('ocean')" class="flex flex-col items-center space-y-2 group">
+                            <div class="w-12 h-12 rounded-full border-2 border-white/20 bg-gradient-to-br from-cyan-600 to-blue-900 group-hover:scale-110 transition-transform"></div>
+                            <span class="text-[10px] font-medium opacity-60">Ocean</span>
+                        </button>
+                        <button onclick="setTheme('sunset')" class="flex flex-col items-center space-y-2 group">
+                            <div class="w-12 h-12 rounded-full border-2 border-white/20 bg-gradient-to-br from-orange-600 to-red-900 group-hover:scale-110 transition-transform"></div>
+                            <span class="text-[10px] font-medium opacity-60">Sunset</span>
+                        </button>
+                        <button onclick="setTheme('forest')" class="flex flex-col items-center space-y-2 group">
+                            <div class="w-12 h-12 rounded-full border-2 border-white/20 bg-gradient-to-br from-emerald-600 to-green-900 group-hover:scale-110 transition-transform"></div>
+                            <span class="text-[10px] font-medium opacity-60">Forest</span>
+                        </button>
+                    </div>
+                </section>
+
+                <section class="space-y-4">
+                    <h4 class="text-xs font-bold uppercase tracking-widest text-white/40 mb-2">General</h4>
+                    <div class="flex justify-between items-center p-4 bg-white/5 rounded-2xl">
+                        <div class="flex items-center space-x-3">
+                            <i class="fas fa-clock text-blue-400"></i>
+                            <span class="font-medium">24-Hour Time</span>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="setting-24h" onchange="toggle24Hour(this.checked)" class="sr-only">
+                            <div class="toggle-bg w-11 h-6 bg-white/20 rounded-full"></div>
+                            <div class="toggle-dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition"></div>
+                        </label>
+                    </div>
+                    
+                    <div class="flex justify-between items-center p-4 bg-white/5 rounded-2xl">
+                        <div class="flex items-center space-x-3">
+                            <i class="fas fa-bell text-red-400"></i>
+                            <span class="font-medium">Notifications</span>
+                        </div>
+                        <button onclick="requestNotificationPermission()" id="notif-btn" class="px-4 py-1.5 bg-macos-accent/20 text-macos-accent rounded-lg text-sm font-bold border border-macos-accent/30 hover:bg-macos-accent hover:text-white transition-all">
+                            Enable
+                        </button>
+                    </div>
+                </section>
+            </div>
+            
+            <div class="p-8 bg-white/5 border-t border-white/10 flex justify-center text-center">
+                 <p class="text-[10px] text-white/20 uppercase tracking-[0.2em]">Crafted with passion for Antigravity</p>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast Container -->
     <div id="toast-container" class="fixed bottom-8 right-8 z-[100] space-y-3"></div>
 
-    <script src="{% static 'js/main.js' %}"></script>
+    <script src="{% static 'js/main.js' %}?v=2"></script>
     <script>
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register("{% static 'js/sw.js' %}");

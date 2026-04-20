@@ -115,6 +115,7 @@ function updateTime() {
     setRotation('sec-hand', secondsRatio);
 
     checkAlarms(now);
+    renderWorldClocks();
 }
 
 function setRotation(id, rotationRatio) {
@@ -390,22 +391,73 @@ function formatTimeMs(ms) {
 }
 
 function toggleSettings() {
-    const themes = ['default', 'ocean', 'sunset', 'forest'];
-    let idx = themes.indexOf(state.theme);
-    state.theme = themes[(idx + 1) % themes.length];
+    const modal = document.getElementById('settings-modal');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
     
+    // Sync UI
+    document.getElementById('setting-24h').checked = state.is24Hour;
+    updateNotifBtn();
+}
+
+function closeSettings() {
+    const modal = document.getElementById('settings-modal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+}
+
+function setTheme(theme) {
+    state.theme = theme;
     saveState();
-    applyTheme(state.theme);
-    showToast(`Theme switched to ${state.theme}`);
+    applyTheme(theme);
+    showToast(`Theme updated to ${theme}`, 'success');
+}
+
+function toggle24Hour(enabled) {
+    state.is24Hour = enabled;
+    saveState();
+    updateTime();
+    renderWorldClocks();
+}
+
+function requestNotificationPermission() {
+    if (!('Notification' in window)) {
+        return showToast('Notifications not supported', 'error');
+    }
+    
+    Notification.requestPermission().then(permission => {
+        updateNotifBtn();
+        if (permission === 'granted') {
+            showToast('Notifications enabled!', 'success');
+        }
+    });
+}
+
+function updateNotifBtn() {
+    const btn = document.getElementById('notif-btn');
+    if (!btn) return;
+    
+    if (Notification.permission === 'granted') {
+        btn.innerText = 'Enabled';
+        btn.classList.replace('bg-macos-accent/20', 'bg-green-500/20');
+        btn.classList.replace('text-macos-accent', 'text-green-400');
+        btn.classList.remove('border-macos-accent/30');
+        btn.disabled = true;
+    } else if (Notification.permission === 'denied') {
+        btn.innerText = 'Blocked';
+        btn.classList.replace('bg-macos-accent/20', 'bg-red-500/20');
+        btn.classList.replace('text-macos-accent', 'text-red-400');
+        btn.disabled = true;
+    }
 }
 
 function applyTheme(theme) {
     const bg = document.body;
     const themeGradients = {
-        default: 'linear-gradient(-45deg, #1e3a8a, #4c1d95, #831843, #1e40af)',
-        ocean: 'linear-gradient(-45deg, #0f172a, #0369a1, #0891b2, #0e7490)',
-        sunset: 'linear-gradient(-45deg, #7c2d12, #991b1b, #7f1d1d, #450a0a)',
-        forest: 'linear-gradient(-45deg, #064e3b, #14532d, #166534, #065f46)'
+        default: 'linear-gradient(-45deg, #0f172a, #1e3a8a, #312e81, #1e1b4b)',
+        ocean: 'linear-gradient(-45deg, #0c4a6e, #0369a1, #075985, #082f49)',
+        sunset: 'linear-gradient(-45deg, #450a0a, #7c2d12, #991b1b, #450a0a)',
+        forest: 'linear-gradient(-45deg, #064e3b, #065f46, #14532d, #022c22)'
     };
     
     bg.style.background = themeGradients[theme] || themeGradients.default;
@@ -424,15 +476,69 @@ function toggleFullscreen() {
 }
 
 async function fetchWeather() {
+    const weatherIconEl = document.getElementById('weather-icon');
+    const weatherTempEl = document.getElementById('weather-temp');
+    const weatherDescEl = document.getElementById('weather-desc');
+    
+    if (!weatherIconEl || !weatherTempEl || !weatherDescEl) return;
+
     try {
-        const res = await fetch('https://wttr.in/?format=3');
-        const data = await res.text();
-        const weatherEl = document.getElementById('weather-widget');
-        if (weatherEl) weatherEl.innerText = data;
+        const res = await fetch(`https://wttr.in/?format=j1&_ts=${Date.now()}`);
+        if (!res.ok) throw new Error('Weather API error');
+        const data = await res.json();
+        
+        const current = data.current_condition[0];
+        const temp = current.temp_C;
+        const desc = current.weatherDesc[0].value;
+        const code = current.weatherCode;
+        const area = data.nearest_area ? data.nearest_area[0].areaName[0].value : 'Unknown Location';
+
+        // Map Weather Codes to FontAwesome icons
+        const iconMap = {
+            '113': 'fa-sun text-yellow-400',
+            '116': 'fa-cloud-sun text-yellow-200',
+            '119': 'fa-cloud text-gray-300',
+            '122': 'fa-cloud text-gray-400',
+            '143': 'fa-smog text-gray-400',
+            '176': 'fa-cloud-rain text-blue-300',
+            '248': 'fa-smog text-gray-400',
+            '260': 'fa-smog text-gray-500',
+            '263': 'fa-cloud-showers-heavy text-blue-300',
+            '266': 'fa-cloud-showers-heavy text-blue-300',
+            '293': 'fa-cloud-rain text-blue-400',
+            '296': 'fa-cloud-rain text-blue-400',
+            '302': 'fa-cloud-showers-heavy text-blue-500',
+            '308': 'fa-cloud-showers-heavy text-blue-600',
+            '353': 'fa-cloud-sun-rain text-blue-300',
+            '356': 'fa-cloud-showers-heavy text-blue-400',
+            '386': 'fa-cloud-bolt text-yellow-500',
+            '389': 'fa-cloud-bolt text-blue-700',
+        };
+
+        const iconClass = iconMap[code] || 'fa-cloud-sun-rain text-blue-400';
+        
+        weatherIconEl.innerHTML = `<i class="fas ${iconClass}"></i>`;
+        weatherTempEl.innerText = `${temp}°C`;
+        weatherDescEl.innerText = `${desc} • ${area}`;
+        
+        // Remove pulse animation after loading
+        weatherIconEl.querySelector('i').classList.remove('animate-pulse');
     } catch (e) {
         console.log("Weather failed", e);
+        weatherDescEl.innerText = "Weather unavailable";
     }
 }
+
+// Add manual refresh to weather widget
+document.getElementById('weather-widget')?.addEventListener('click', () => {
+    const icon = document.getElementById('weather-icon')?.querySelector('i');
+    if (icon) icon.classList.add('animate-spin');
+    fetchWeather().finally(() => {
+        setTimeout(() => {
+            if (icon) icon.classList.remove('animate-spin');
+        }, 1000);
+    });
+});
 
 function saveState() {
     localStorage.setItem('worldClocks', JSON.stringify(state.worldClocks));
