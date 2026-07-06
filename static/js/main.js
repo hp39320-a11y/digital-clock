@@ -40,13 +40,41 @@ document.addEventListener('DOMContentLoaded', () => {
     
     if (state.isAnalog) toggleAnalogUI(true);
 
-    // Shortcuts
+    // Shortcuts and Escape key handling
     document.addEventListener('keydown', (e) => {
+        const isTyping = e.target.tagName === 'INPUT' || 
+                         e.target.tagName === 'TEXTAREA' || 
+                         e.target.tagName === 'SELECT';
+
+        if (e.key === 'Escape') {
+            closeWorldClockModal();
+            closeAlarmModal();
+            closeSettings();
+            return;
+        }
+
+        if (isTyping) return; // Prevent typing from triggering shortcuts
+
         if (e.key === 'a') switchTab('alarm');
         if (e.key === 'c') switchTab('clock');
         if (e.key === 's') switchTab('stopwatch');
         if (e.key === 't') switchTab('timer');
         if (e.key === 'f') toggleFullscreen();
+    });
+
+    // Close modals on clicking outside their content
+    const modals = ['world-clock-modal', 'alarm-modal', 'settings-modal'];
+    modals.forEach(id => {
+        const modalEl = document.getElementById(id);
+        if (modalEl) {
+            modalEl.addEventListener('click', (e) => {
+                if (e.target === modalEl) {
+                    if (id === 'world-clock-modal') closeWorldClockModal();
+                    if (id === 'alarm-modal') closeAlarmModal();
+                    if (id === 'settings-modal') closeSettings();
+                }
+            });
+        }
     });
     
     if ('Notification' in window) {
@@ -143,6 +171,39 @@ function toggleAnalogUI(isAnalog) {
 }
 
 // --- World Clock ---
+const availableCities = [
+    { city: 'London', zone: 'Europe/London' },
+    { city: 'New York', zone: 'America/New_York' },
+    { city: 'Tokyo', zone: 'Asia/Tokyo' },
+    { city: 'Sydney', zone: 'Australia/Sydney' },
+    { city: 'Paris', zone: 'Europe/Paris' },
+    { city: 'Dubai', zone: 'Asia/Dubai' },
+    { city: 'Singapore', zone: 'Asia/Singapore' },
+    { city: 'Mumbai', zone: 'Asia/Kolkata' },
+    { city: 'Los Angeles', zone: 'America/Los_Angeles' },
+    { city: 'Chicago', zone: 'America/Chicago' },
+    { city: 'São Paulo', zone: 'America/Sao_Paulo' },
+    { city: 'Cairo', zone: 'Africa/Cairo' },
+    { city: 'Johannesburg', zone: 'Africa/Johannesburg' },
+    { city: 'Moscow', zone: 'Europe/Moscow' },
+    { city: 'Hong Kong', zone: 'Asia/Hong_Kong' },
+    { city: 'Seoul', zone: 'Asia/Seoul' },
+    { city: 'Berlin', zone: 'Europe/Berlin' },
+    { city: 'Rome', zone: 'Europe/Rome' },
+    { city: 'Toronto', zone: 'America/Toronto' },
+    { city: 'Mexico City', zone: 'America/Mexico_City' },
+    { city: 'Buenos Aires', zone: 'America/Argentina/Buenos_Aires' },
+    { city: 'Auckland', zone: 'Pacific/Auckland' },
+    { city: 'Reykjavik', zone: 'Atlantic/Reykjavik' },
+    { city: 'Honolulu', zone: 'Pacific/Honolulu' },
+    { city: 'Lagos', zone: 'Africa/Lagos' },
+    { city: 'Istanbul', zone: 'Europe/Istanbul' },
+    { city: 'Shanghai', zone: 'Asia/Shanghai' },
+    { city: 'Bangkok', zone: 'Asia/Bangkok' },
+    { city: 'Nairobi', zone: 'Africa/Nairobi' },
+    { city: 'Riyadh', zone: 'Asia/Riyadh' }
+];
+
 function renderWorldClocks() {
     const container = document.getElementById('world-clock-list');
     if (!container) return;
@@ -173,6 +234,73 @@ function removeWorldClock(index) {
     state.worldClocks.splice(index, 1);
     saveState();
     renderWorldClocks();
+    filterCities();
+}
+
+function openWorldClockModal() {
+    const modal = document.getElementById('world-clock-modal');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    const searchInput = document.getElementById('world-clock-search');
+    if (searchInput) {
+        searchInput.value = '';
+        searchInput.focus();
+    }
+    filterCities();
+}
+
+function closeWorldClockModal() {
+    const modal = document.getElementById('world-clock-modal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+}
+
+function filterCities() {
+    const searchInput = document.getElementById('world-clock-search');
+    const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
+    const resultsContainer = document.getElementById('city-search-results');
+    if (!resultsContainer) return;
+
+    const filtered = availableCities.filter(c => 
+        c.city.toLowerCase().includes(query) || 
+        c.zone.toLowerCase().includes(query)
+    );
+
+    if (filtered.length === 0) {
+        resultsContainer.innerHTML = `<div class="p-3 text-center text-white/40 text-sm">No cities found</div>`;
+        return;
+    }
+
+    resultsContainer.innerHTML = filtered.map(c => {
+        const isAlreadyAdded = state.worldClocks.some(wc => wc.city.toLowerCase() === c.city.toLowerCase());
+        return `
+            <div class="flex justify-between items-center p-3 hover:bg-white/10 rounded-xl transition-all">
+                <div>
+                    <p class="font-medium text-sm text-white">${c.city}</p>
+                    <p class="text-[10px] text-white/40 font-mono">${c.zone}</p>
+                </div>
+                ${isAlreadyAdded ? `
+                    <span class="text-xs text-green-400 font-medium px-2.5 py-1 bg-green-500/10 rounded-lg">Added</span>
+                ` : `
+                    <button onclick="addWorldClock('${c.city}', '${c.zone}')" class="bg-macos-accent text-white px-3 py-1 rounded-lg text-xs font-bold hover:opacity-90 transition-all">
+                        Add
+                    </button>
+                `}
+            </div>
+        `;
+    }).join('');
+}
+
+function addWorldClock(city, zone) {
+    if (state.worldClocks.some(wc => wc.city.toLowerCase() === city.toLowerCase())) {
+        return showToast('City already added', 'error');
+    }
+
+    state.worldClocks.push({ city, zone });
+    saveState();
+    renderWorldClocks();
+    filterCities();
+    showToast(`Added ${city} to World Clock`, 'success');
 }
 
 // --- Alarm System ---

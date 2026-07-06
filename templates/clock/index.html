@@ -132,7 +132,13 @@
             </div>
             
             <!-- Quick World Clocks -->
-            <div id="world-clock-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-5xl mt-12">
+            <div class="w-full max-w-5xl flex justify-between items-center mt-12 mb-4 px-4 sm:px-0">
+                <h3 class="text-xl font-bold tracking-tight opacity-80">World Clock</h3>
+                <button onclick="openWorldClockModal()" class="bg-white/10 px-4 py-2 rounded-full font-semibold hover:bg-white/20 transition-all flex items-center text-sm border border-white/5">
+                    <i class="fas fa-plus mr-2"></i> Add City
+                </button>
+            </div>
+            <div id="world-clock-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-5xl">
                 <!-- World clocks will be injected here -->
             </div>
         </div>
@@ -250,6 +256,28 @@
             <div class="flex space-x-3 mt-10">
                 <button onclick="closeAlarmModal()" class="flex-1 p-4 rounded-2xl bg-white/10 hover:bg-white/20 transition-all font-medium">Cancel</button>
                 <button onclick="saveAlarm()" class="flex-1 p-4 rounded-2xl bg-macos-accent hover:opacity-90 transition-all font-bold">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- World Clock Modal -->
+    <div id="world-clock-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="macos-glass w-full max-w-md rounded-3xl p-8 animate-modal-in border border-white/10">
+            <h3 class="text-2xl font-bold mb-6">Add World Clock</h3>
+            <div class="space-y-6">
+                <div>
+                    <label class="block text-sm opacity-50 mb-2">Search City</label>
+                    <div class="relative">
+                        <input type="text" id="world-clock-search" placeholder="e.g. Paris, Tokyo, Sydney..." class="w-full bg-white/10 p-4 pl-11 rounded-xl text-lg focus:outline-none text-white border border-white/5" oninput="filterCities()">
+                        <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-white/40"></i>
+                    </div>
+                </div>
+                <div class="max-h-60 overflow-y-auto space-y-2 bg-black/20 p-2 rounded-2xl border border-white/5" id="city-search-results">
+                    <!-- Dynamic search results will be injected here -->
+                </div>
+            </div>
+            <div class="flex space-x-3 mt-8">
+                <button onclick="closeWorldClockModal()" class="flex-1 p-4 rounded-2xl bg-white/10 hover:bg-white/20 transition-all font-medium">Close</button>
             </div>
         </div>
     </div>
